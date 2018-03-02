@@ -1,0 +1,14 @@
+#direction {
+    position: absolute;
+    top: 40px; left: 80px;
+}
+
+#detail {
+    position: absolute;
+    top: 40px; left: 40px;
+    display: none;
+}
+
+#credit {
+    font-size: 80%;
+}
