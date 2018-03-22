@@ -2,3 +2,5 @@
 *.pyo
 
 db.sqlite3
+
+tilescache/

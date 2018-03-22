@@ -9,6 +9,10 @@
     display: none;
 }
 
-#credit {
+.credit {
     font-size: 80%;
+}
+
+#loader {
+    height: 320px;
 }
