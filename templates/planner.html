@@ -48,21 +48,21 @@
                       <div class="default text">Type</div>
                       <i class="dropdown icon"></i>
                       <div class="menu">
-                        <div class="item" data-value="driving">
+                        <div class="item" data-value="car">
                           <i class="car icon"></i>
                           Driving
                         </div>
-                        <div class="item" data-value="walking">
+                        <div class="item" data-value="foot">
                           <i class="male icon"></i>
                           Walking
                         </div>
-                        <div class="item" data-value="bicycling">
+                        <div class="item" data-value="cycle">
                           <i class="bicycle icon"></i>
                           Bicycling
                         </div>
-                        <div class="item" data-value="motorcycle">
+                        <div class="item" data-value="scooter">
                             <i class="motorcycle icon"></i>
-                            Motorcycle
+                            Motorcycling
                         </div>
                       </div>
                     </div>
@@ -85,7 +85,7 @@
               </div>
 
               <div class="ui feed item" id="detailedDirections">
-                <div class="ui medium header">No. 128, Section 2, Academia Rd, Nangang District, Taipei City, Taiwan 11529</div>
+                <div class="ui medium header">Academia Sinica</div>
                 <div class="event">
                   <div class="label">
                     <img src="{% static "img/up-straight-arrow-2.png" %}">
@@ -176,7 +176,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="ui medium header">Taipei 101, No. 7, Section 5, Xinyi Road, Xinyi District, Taipei City, Taiwan 110</div>
+                <div class="ui medium header">MRT Taipei Nangang Exhibition Center Station</div>
 
                 
               </div>
@@ -209,7 +209,7 @@
             var map = new mapboxgl.Map({
                 container: 'map',
                 style: 'mapbox://styles/mapbox/streets-v10',
-                center: [120.6009325, 24.1589391],
+                center: [121.614488, 25.042262],
                 zoom: 11
             });
 /*
@@ -236,6 +236,12 @@
             el.src = "{% static "img/pin.png" %}"
             el.style.width = '35px';
             el.style.height = '35px';
+
+            var el2 = document.createElement('img');
+            el2.className = 'marker';
+            el2.src = "{% static "img/pin.png" %}"
+            el2.style.width = '35px';
+            el2.style.height = '35px';
 
             $("#detailedDirections").css("display", "none")
             $("#loader").css("display", "none")
@@ -285,7 +291,10 @@
                         console.log("Ajax returned.")
                         $("#loader").css("display", "none")
                         $("#detailedDirections").css("display", "block")
-                        var routeData = data["path"].map(function(x) {
+                        var CAR = data["CAR"].map(function(x) {
+                            return [x[1], x[0]];
+                        })
+                        var google = data["google"].map(function(x) {
                             return [x[1], x[0]];
                         })
                         map.addLayer({
@@ -298,7 +307,7 @@
                                     "properties": {},
                                     "geometry": {
                                         "type": "LineString",
-                                        "coordinates": routeData
+                                        "coordinates": CAR
                                     }
                                 }
                             },
@@ -307,18 +316,56 @@
                                 "line-cap": "round"
                             },
                             "paint": {
-                                "line-color": "#ffff00",
+                                "line-color": "#120cb7",
                                 "line-width": 6,
                                 "line-opacity": 0.9
                             }
                         });
-                        var marker = new mapboxgl.Marker(el, {offset:[0, -15]})
-                            .setLngLat(routeData[routeData.length - 1]) 
+                        map.addLayer({
+                            "id": "route2",
+                            "type": "line",
+                            "source": {
+                                "type": "geojson",
+                                "data": {
+                                    "type": "Feature",
+                                    "properties": {},
+                                    "geometry": {
+                                        "type": "LineString",
+                                        "coordinates": google
+                                    }
+                                }
+                            },
+                            "layout": {
+                                "line-join": "round",
+                                "line-cap": "round"
+                            },
+                            "paint": {
+                                "line-color": "#e0281a",
+                                "line-width": 6,
+                                "line-opacity": 0.9
+                            }
+                        });
+                        var marker1 = new mapboxgl.Marker(el, {offset:[0, -15]})
+                            .setLngLat(CAR[CAR.length - 1]) 
                             .addTo(map);
 
+                        
+                        var marker2 = new mapboxgl.Marker(el2, {offset:[0, -15]})
+                            .setLngLat(CAR[0]) 
+                            .addTo(map);
+                        
+                        var cd = data["CAR_DISTANCE"]
+                        var cp = data['CAR_PM25']
                         var popup1 = new mapboxgl.Popup({closeButton: false})
-                            .setLngLat(routeData[Math.round(routeData.length / 2)])
-                            .setHTML('<div class="ui large list"><div class="item"><i class="bicycle icon"></i> 23 mins</div><div class="item">PM2.5 exposure: 23</div></div>')
+                            .setLngLat(CAR[Math.round(CAR.length / 2)])
+                            .setHTML('<div class="ui large list cute"><div class="item">CAR</div><div class="item"><i class="' + data["ICON"] +' icon"></i> ' +  cd + 'km, ' + data["CAR_TIME"] + '</div><div class="item">PM2.5 exposure: ' + cp +'</div></div>')
+                            .addTo(map);
+
+                        var gd = data['GOOGLE_DISTANCE']
+                        var gp = data['GOOGLE_PM25']
+                        var popup2 = new mapboxgl.Popup({closeButton: false})
+                            .setLngLat(google[Math.round(google.length / 2)])
+                            .setHTML('<div class="ui large list cute"><div class="item">Google</div><div class="item"><i class="' + data["ICON"] +' icon"></i> ' + gd + 'km, ' + data["GOOGLE_TIME"] + '</div><div class="item">PM2.5 exposure: ' + gp + '</div></div>')
                             .addTo(map);
                     }
                 });

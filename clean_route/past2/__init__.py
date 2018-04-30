@@ -7,7 +7,7 @@ import sys
 import math
 import osmapi
 import xml.etree.ElementTree as etree
-from . import (tiledata, tilenames)
+from . import (tiledata, tilenames, google)
 import pandas as pd
 import numpy as np
 
@@ -265,10 +265,10 @@ class Router(object):
         self.data = Datastore(transport, localfile)
 
     def distance(self, n1, n2):
-        lat0 = np.radians(self.data.rnodes[n1][0])
-        lon0 = np.radians(self.data.rnodes[n1][1])
-        lat1 = np.radians(self.data.rnodes[n2][0])
-        lon1 = np.radians(self.data.rnodes[n2][1])
+        lat0 = self.data.rnodes[n1][0]
+        lon0 = self.data.rnodes[n1][1]
+        lat1 = self.data.rnodes[n2][0]
+        lon1 = self.data.rnodes[n2][1]
         # """Return the distance (in km) between two points in geographical coordinates."""
         lat_dis = 111.2 #111.22634257109472 =370.35302229119566/(25.263236-21.933512)
 
@@ -281,7 +281,7 @@ class Router(object):
 
         a = (lon0 - lon1)*lon_dis
         b = (lat1-lat0) *lat_dis
-        dist_sq = a*a+b*b
+        dist_sq = np.sqrt(a*a+b*b)
         return(dist_sq)
 
     def eas_dist_sq(self,lat0,lon0, lat1, lon1):
@@ -294,9 +294,9 @@ class Router(object):
             lon_dis= 102.3 #102.34096828979374=201.3773467135097/(122.023366-120.055656) at 23.0561615
         else:
             lon_dis= 101.8 #101.76320306104364= 200.24047229524584/(122.023366-120.055656) at 23.8045945
-            a = (lon0 - lon1)*lon_dis
-            b = (lat1-lat0) *lat_dis
-            dist_sq = a*a+b*b
+        a = (lon0 - lon1)*lon_dis
+        b = (lat1-lat0) *lat_dis
+        dist_sq = np.sqrt(a*a+b*b)
         return(dist_sq)
 
     def distance2(self, n1, n2):
@@ -322,6 +322,9 @@ class Router(object):
         """Get node's lat lon"""
         lat, lon = self.data.rnodes[node][0], self.data.rnodes[node][1]
         return([lat, lon])
+
+    #def superRoute(self, start, end):
+        #if google.googleRoute() < 40
 
     def doRoute(self, start, end, start_hour, start_minute, neighborNum):
         """Do the routing"""
@@ -399,8 +402,8 @@ class Router(object):
             'pathid'        :pathid,
             'past_time'     :str(past_time[0]) +":"+ str(past_time[1]),
             'distance'      :distanceSoFar + distance,
-            'pm25exposure'  :exposureSoFar + distance * self.interpolation_spatial_vector(self.data.rnodes[start][1],  self.data.rnodes[start][0], past_time[0], past_time[1]),
-            'maxexposure'   :exposureSoFar + self.distance(end, self.searchEnd) * self.interpolation_spatial_vector(self.data.rnodes[start][1], self.data.rnodes[start][0], past_time[0], past_time[1]),
+            'pm25exposure'  :exposureSoFar + distance * self.interpolation(self.data.rnodes[start][1],  self.data.rnodes[start][0], past_time[0], past_time[1]),
+            'maxexposure'   :exposureSoFar + self.distance(end, self.searchEnd) * self.interpolation(self.data.rnodes[start][1], self.data.rnodes[start][0], past_time[0], past_time[1]),
             'maxdistance'   :distanceSoFar + self.distance(end, self.searchEnd),
             'nodes'         :queueSoFar['nodes'] + "," + str(end),
             'end'           :end
@@ -422,40 +425,75 @@ class Router(object):
     def interpolation_temporal_vector(self, hour, minute):
         #hour:minute is between 8am and 12pm
         '''     preparing and resetting     ''' 
-        sampled   = pd.read_csv('/Users/summerlight/Google Drive/oAC/project-mapping/main_code/past2/res_id.CSV')
-        epsilon = float(1.0 * minute / 60.0)
-        X, am, pm      = 'X', 'am', 'pm'
-        field_start = X+str(hour)  +am
+        sampled   = pd.read_csv('/Users/summerlight/Google Drive/oAC/project-mapping/clean_route/clean_route/past2/hello2.csv')
+
+        now, h = 'now', 'h'
+        field_start = now+'+'+str(hour) +h
         if minute == 0:
             field_end = field_start
         else:
-            field_end = X+str(hour+1)+am
+            field_end = now+'+'+str(hour+1) +h
 
-        newTimeValue = []
-        for i in range(len(sampled[field_start])):
-            newTimeValue.extend([sampled[field_start][i]*   epsilon+\
-                                      sampled[field_end][i]  *(1-epsilon)])
-        sampled['pm2.5'] = newTimeValue
+        epsilon = float(1.0 * minute / 60.0)
+
+        sampled['pm2.5'] = sampled[field_start] * epsilon + sampled[field_end] * (1-epsilon)
         return sampled
 
-    def interpolation_spatial_vector(self, lon, lat, hour, minute):
+    def search_sensor(self, lat, lon):
+        lonn=[119.3,120.0, 120.7 ,121.4, 122.1,122.8] #0.7
+        latt=[25.1, 24.8, 24.5, 24.2, 23.9, 23.6, 23.3, 23.0, 22.7, 22.4, 22.1] #0.3
+        column = 0
+        row = 0
+        for i in range(5):
+            if lonn[i] <=lon <lonn[i+1]:
+                column = i+1
+                break
+        for j in range(10):
+            if latt[j+1] <=lat <latt[j]:
+                row = j+1
+                break
+        return str((raw, column))
+
+    def interpolation(self, lon, lat, hour, minute):
         '''     preparing and resetting     ''' 
         # neighborNum = 10
-        sampled = self.interpolation_temporal_vector(hour, minute)
+        # sampled = self.interpolation_temporal_vector(hour, minute)
+        sampled   = pd.read_csv('/Users/summerlight/Google Drive/oAC/project-mapping/clean_route/clean_route/past2/hello_herro.csv')
+
         nearest = []
         neighborNum = self.neighborNum
         inverse = []
         total_distance_neighbor_inverse = 0
         weight = []
+        #tag = self.search_sensor(lat, lon)
+        #sampled = sampled[sampled["GRID"] == tag]
+
+        distance = list(map(lambda x: self.eas_dist_sq(lat, lon, x[0], x[1]), list(zip(sampled["LATITUDE"], sampled["LONGTITUDE"]))))
+
+        sampled["DIS"] = distance
+        index = sampled["DIS"].idxmin()
+
+        #for j in range(len(sampled)):
+        #    dist_qr = self.eas_dist_sq(lat,lon, float(sampled['LATITUDE'][j]), float(sampled['LONGTITUDE'][j]))
+        #    nearest.append([j, dist_qr])
         
-        for j in range(len(sampled)):
-            dist_qr = self.eas_dist_sq(lat,lon, float(sampled['lat'][j]), float(sampled['lon'][j]))
-            nearest.append([j, dist_qr, sampled['pm2.5'][j]])
-                
+        # nearest = sorted(nearest, key = lambda x: x[1])
+        #min_station = min(nearest, key=lambda x:x[1])
 
-        nearest = sorted(nearest, key = lambda x: x[1])
-        nearest = nearest[0:neighborNum]
+        now, h = 'now', 'h'
+        field_start = now+'+'+str(hour) +h
+        if minute == 0:
+            field_end = field_start
+        else:
+            field_end = now+'+'+str(hour+1) +h
 
+        epsilon = float(1.0 * minute / 60.0)
+
+        value = float(sampled[sampled.index == index][field_start]) * epsilon + float(sampled[sampled.index == index][field_end]) * (1-epsilon)
+        # sampled[min_station[0]]
+        # nearest[0:neighborNum]
+
+        '''
         for i in range(len(nearest)):
             nearest[i].append(1/nearest[i][1])
             total_distance_neighbor_inverse = total_distance_neighbor_inverse + nearest[i][3]
@@ -464,7 +502,8 @@ class Router(object):
             weight.append([i[3]/total_distance_neighbor_inverse, i[2]])
             
         loc_val = sum([item[0] * item[1] for item in weight])
-        return loc_val
+        '''
+        return value
 
 
     def duration(self, start_hour, start_minute, route_len):
@@ -478,16 +517,7 @@ class Router(object):
             velocity = 15
 
 
-        past_time = (route_len/velocity)*60+start_minute
+        past_time = (route_len/velocity)*60 + start_minute
         
-        if (past_time >= 60 and past_time<120): # minute
-            next_hour   = start_hour+1
-            next_minute = past_time - 60
-        elif past_time>=120:
-            next_hour   = start_hour+2
-            next_minute = past_time - 120            
-        else:
-            next_hour   = start_hour
-            next_minute = past_time
-        return next_hour, next_minute
+        return int(past_time / 60), int(past_time % 60)
         
