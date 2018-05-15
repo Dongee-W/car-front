@@ -14,7 +14,6 @@
     <link href='https://api.mapbox.com/mapbox-gl-js/v0.42.0/mapbox-gl.css' rel='stylesheet'/>    
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css">
-    <link rel="stylesheet" href="{% static "css/map.css" %}">
     <script
             src="https://code.jquery.com/jquery-3.3.1.min.js"
             integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
@@ -194,14 +193,16 @@
             <button class="ui fixed right labeled icon button" >
                 Direction
             </button>
-            <button class="ui right labeled icon button huge orange" id="direction">
+            <button class="ui right labeled icon button huge blue" id="direction">
                 <i class="map signs icon"></i>
                 Plan clean route!
             </button>
-            <button class="ui left labeled icon button" id="detail">
+            <button class="ui huge icon right attached blue button" id="detail">
                 <i class="chevron right icon"></i>
-                Show directions
             </button>
+            <a class="ui launch top attached fixed blue button" id="feedback" href="/feedback">
+              Feedback
+            </a>
         </div>
 
         <script>

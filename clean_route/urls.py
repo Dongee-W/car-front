@@ -20,5 +20,6 @@ from . import views
 
 urlpatterns = [
     path('', views.planCleanRoute),
+    path('feedback', views.feedback),
     path('ajax/planning', views.ajaxCall),
 ]

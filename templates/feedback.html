@@ -1,0 +1,156 @@
+{% load static %}
+<!doctype html>
+<head>
+    <meta charset="utf-8">
+
+    <title>PM2.5 Routing</title>
+    <meta name="description" content="The HTML5 Herald">
+    <meta name="author" content="SitePoint">
+
+    <link rel="stylesheet" href="{% static "css/feedback.css" %}">
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.42.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v0.42.0/mapbox-gl.css' rel='stylesheet'/>    
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.1/semantic.min.css">
+    <script
+            src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.1/semantic.min.js"></script>
+    
+
+    <!--[if lt IE 9]>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+    <![endif]-->
+</head>
+<body>
+    <div class="ui container">
+        <h1 class="ui blue huge center aligned header" id="header">Feedback from users</h1>
+        <div class="ui fluid action right labeled input">
+            <input type="text" placeholder="Comment">
+            <div class="ui star rating label" data-rating="3"></div>
+            <div class="ui blue button">Post</div>
+        </div>
+        <div class="ui feed">
+            <div class="event">
+              <div class="label">
+                <i class="comment icon"></i>
+              </div>
+              <div class="content">
+                <div class="summary">
+                  <a class="user">
+                    Elliot Fu
+                  </a> added you as a friend
+                  <div class="date">
+                    1 Hour Ago
+                  </div>
+                </div>
+                <div class="meta">
+                  <div class="ui star rating" data-rating="3"></div>
+                </div>
+              </div>
+            </div>
+            <div class="event">
+              <div class="label">
+                <i class="user icon"></i>
+              </div>
+              <div class="content">
+                <div class="summary">
+                  <a>Helen Troy</a> added <a>2 new illustrations</a>
+                  <div class="date">
+                    4 days ago
+                  </div>
+                </div>
+                <div class="extra images">
+                  <a><img src="/images/wireframe/image.png"></a>
+                  <a><img src="/images/wireframe/image.png"></a>
+                </div>
+                <div class="meta">
+                  <a class="like">
+                    <i class="like icon"></i> 1 Like
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="event">
+              <div class="label">
+                <i class="pencil icon"></i>
+              </div>
+              <div class="content">
+                <div class="summary">
+                  <a class="user">
+                    Jenny Hess
+                  </a> added you as a friend
+                  <div class="date">
+                    2 Days Ago
+                  </div>
+                </div>
+                <div class="meta">
+                  <a class="like">
+                    <i class="like icon"></i> 8 Likes
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="event">
+              <div class="label">
+                <i class="pencil icon"></i>
+              </div>
+              <div class="content">
+                <div class="summary">
+                  <a>Joe Henderson</a> posted on his page
+                  <div class="date">
+                    3 days ago
+                  </div>
+                </div>
+                <div class="extra text">
+                  Ours is a life of constant reruns. We're always circling back to where we'd we started, then starting all over again. Even if we don't run extra laps that day, we surely will come back for more of the same another day soon.
+                </div>
+                <div class="meta">
+                  <a class="like">
+                    <i class="like icon"></i> 5 Likes
+                  </a>
+                </div>
+              </div>
+            </div>
+            <div class="event">
+              <div class="label">
+                <i class="comment icon"></i>
+              </div>
+              <div class="content">
+                <div class="summary">
+                  <a>Justen Kitsune</a> added <a>2 new photos</a> of you
+                  <div class="date">
+                    4 days ago
+                  </div>
+                </div>
+                <div class="extra images">
+                  <a><img src="/images/wireframe/image.png"></a>
+                  <a><img src="/images/wireframe/image.png"></a>
+                </div>
+                <div class="meta">
+                  <a class="like">
+                    <i class="like icon"></i> 41 Likes
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+    </div>
+    <script>
+        
+        $('.input .rating')
+            .rating({
+                initialRating: 0,
+                maxRating: 5
+            }).rating('enable');
+        $('.feed .rating')
+            .rating({
+                initialRating: 0,
+                maxRating: 5
+            }).rating('disable');
+    </script>
+</body>
+
+
+</html>

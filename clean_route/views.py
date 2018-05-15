@@ -7,6 +7,10 @@ def planCleanRoute(request):
     context = {}
     return render(request, 'planner.html', context)
 
+def feedback(request):
+    context = {}
+    return render(request, 'feedback.html', context)
+
 def ajaxCall(request):
     starting = request.GET.get('starting', None)
     destination = request.GET.get('destination', None)
