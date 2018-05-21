@@ -3,8 +3,11 @@ from django.http import JsonResponse
 from django.http import HttpResponse
 
 from urllib.request import urlopen
+import urllib
 
 import json
+import re
+
 from . import past2
 
 def planCleanRoute(request):
@@ -20,15 +23,47 @@ def ajaxCall(request):
     destination = request.GET.get('destination', None)
     mode = request.GET.get('mode', None)
 
-    lat_start = float(starting.split(",")[0])
-    lon_start = float(starting.split(",")[1])
+    p = re.compile('^(\d+\.*\d+),(\d+\.*\d+)$')
+    matchedFrom = p.match(starting)
+    matchedTo = p.match(destination)
 
-    lat_destination = float(destination.split(",")[0])
-    lon_destination = float(destination.split(",")[1])
+    if matchedFrom and matchedTo:
+        latFrom = matchedFrom.group(1)
+        lonFrom = matchedFrom.group(2)
+        latTo = matchedTo.group(1)
+        lonTo = matchedTo.group(2)
+        print(str(latFrom) + "," + str(lonFrom))
+        print(str(latTo) + "," + str(lonTo))
+        data = urlopen(f'http://localhost:8080/car?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode=driving').read()
+        res = JsonResponse(json.loads(data))
+    else:
+        # safe for use as URL
+        urlSaveFrom = urllib.parse.quote(starting)
+        urlSaveTo = urllib.parse.quote(destination)
 
-    data = urlopen(f'http://localhost:8080/car?latFrom={lat_start}&lonFrom={lon_start}&latTo={lat_destination}&lonTo={lon_destination}&mode=driving').read()
-    print(data)
-    return JsonResponse(json.loads(data))
+        # Geocoding
+        codingFrom = urlopen(f'https://graphhopper.com/api/1/geocode?q={urlSaveFrom}&locale=en&key=81975b92-1fe0-46f0-a9d9-a0bd40d90a46').read()
+        codingTo= urlopen(f'https://graphhopper.com/api/1/geocode?q={urlSaveTo}&locale=en&key=81975b92-1fe0-46f0-a9d9-a0bd40d90a46').read()
+
+        resultFrom = json.loads(codingFrom)
+        resultTo = json.loads(codingTo)
+
+        if (len(resultFrom['hits']) > 0) and (len(resultTo['hits']) > 0):
+            latFrom = resultFrom['hits'][0]['point']['lat']
+            lonFrom = resultFrom['hits'][0]['point']['lng']
+            latTo = resultTo['hits'][0]['point']['lat']
+            lonTo = resultTo['hits'][0]['point']['lng']
+
+            print(str(latFrom) + "," + str(lonFrom))
+            print(str(latTo) + "," + str(lonTo))
+            
+
+            data = urlopen(f'http://localhost:8080/car?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode=driving').read()
+            res = JsonResponse(json.loads(data))
+        else :
+            res = JsonResponse({"status": "NOT_FOUND", "message": "Cannot locate starting point or destination.", "route": None})
+    
+    return res
 
 
 def oldAjaxCall(request):

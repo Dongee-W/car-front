@@ -215,8 +215,11 @@
                     dataType: 'json',
                     success: function (data) {
                       console.log("Ajax returned.")
-                      
-                      var iconMapper = function(code){
+                      $("#loader").css("display", "none")
+                      $("#detailedDirections").css("display", "block")
+
+                      if (data["status"] == "OK") {
+                        var iconMapper = function(code){
                         if(code == -7) {
                               return "{% static "img/forward.png" %}"
                           } else if (code == -3) {
@@ -238,16 +241,16 @@
                           }
                       }
 
-                      var CAR = data["path"].map(function(x) {
+                      var CAR = data["route"]["path"].map(function(x) {
                             return [x[1], x[0]];
                         })
                       map.flyTo({center: CAR[Math.round(CAR.length / 2)]});
                       
                         
-                        for (var i = 0; i < data["direction"].length; i++) {
-                          var time = Math.round(data["direction"][i]["time"] / 6000) / 10
-                          var distance = Math.round(data["direction"][i]["distance"])
-                          var icon = iconMapper(data["direction"][i]["code"])
+                        for (var i = 0; i < data["route"]["direction"].length; i++) {
+                          var time = Math.round(data["route"]["direction"][i]["time"] / 6000) / 10
+                          var distance = Math.round(data["route"]["direction"][i]["distance"])
+                          var icon = iconMapper(data["route"]["direction"][i]["code"])
                           $("#inner").append(`
                           <div class="event">
                             <div class="label">
@@ -255,7 +258,7 @@
                             </div>
                             <div class="content">
                               <div class="summary">
-                                  ${data["direction"][i]["instruction"]} <a>${data["direction"][i]["name"]}</a>
+                                  ${data["route"]["direction"][i]["instruction"]} <a>${data["route"]["direction"][i]["name"]}</a>
                                 <div class="date">
                                     ${distance} m
                                 </div>
@@ -268,7 +271,6 @@
                             </div>
                           </div>
                           `)
-                          console.log(data["direction"][i])
                         }
 
                         $("#loader").css("display", "none")
@@ -336,12 +338,12 @@
                             .addTo(map);
 
                         
-                        var cd = Math.round(data["total_distance"])
-                        var cp = Math.round(data['total_pm25'])
-                        var ct = Math.round(data['total_time'] / 60000)
+                        var cd = Math.round(data["route"]["total_distance"])
+                        var cp = Math.round(data["route"]['total_pm25'])
+                        var ct = Math.round(data["route"]['total_time'] / 60000)
                         popup1 = new mapboxgl.Popup({closeButton: false})
                             .setLngLat(CAR[Math.round(CAR.length / 2)])
-                            .setHTML('<div class="ui large list cute"><div class="item">CAR</div><div class="item"><i class="' + 'car' +' icon"></i> ' +  cd + 'km, ' + ct + 'min</div><div class="item">PM2.5 exposure: ' + cp +'</div></div>')
+                            .setHTML('<div class="ui large list cute"><div class="item">CAR</div><div class="item"><i class="' + 'car' +' icon"></i> ' +  cd + 'm, ' + ct + 'min</div><div class="item">PM2.5 exposure: ' + cp +'</div></div>')
                             .addTo(map);
                         /*
                         var gd = data['GOOGLE_DISTANCE']
@@ -350,6 +352,19 @@
                             .setLngLat(google[Math.round(google.length / 2)])
                             .setHTML('<div class="ui large list cute"><div class="item">Google</div><div class="item"><i class="' + data["ICON"] +' icon"></i> ' + gd + 'km, ' + data["GOOGLE_TIME"] + '</div><div class="item">PM2.5 exposure: ' + gp + '</div></div>')
                             .addTo(map);*/
+                      } else {
+                        $("#inner").append(`
+                        <div class="ui negative message">
+                            <i class="close icon"></i>
+                            <div class="header">
+                                We're sorry we can't find the route.
+                            </div>
+                            <p>${data["status"]}
+                        </p></div>
+                          `)
+                      }
+                      
+                      
                     }
                 });
             });
