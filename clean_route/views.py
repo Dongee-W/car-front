@@ -65,6 +65,21 @@ def ajaxCall(request):
     
     return res
 
+def google(request):
+    starting = request.GET.get('starting', None)
+    destination = request.GET.get('destination', None)
+    mode = request.GET.get('mode', None)
+
+    mapping = {"car": "driving", "foot": "walking", "cycle": "driving", "scooter": "driving"}
+
+    google_route = past2.google.googleRoute(starting, destination, mapping[mode])
+    gp = "{:.1f}".format(past2.google.pm25_exposure(google_route[2], mapping[mode]))
+
+    google_distance = float(google_route[0])/1000
+
+    response = {"google": google_route[2], "google_distance": google_distance, 
+        "google_time": google_route[1], "google_pm25": gp}
+    return JsonResponse(response)
 
 def oldAjaxCall(request):
     starting = request.GET.get('starting', None)
