@@ -1,6 +1,10 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.http import HttpResponse
 
+from urllib.request import urlopen
+
+import json
 from . import past2
 
 def planCleanRoute(request):
@@ -12,6 +16,22 @@ def feedback(request):
     return render(request, 'feedback.html', context)
 
 def ajaxCall(request):
+    starting = request.GET.get('starting', None)
+    destination = request.GET.get('destination', None)
+    mode = request.GET.get('mode', None)
+
+    lat_start = float(starting.split(",")[0])
+    lon_start = float(starting.split(",")[1])
+
+    lat_destination = float(destination.split(",")[0])
+    lon_destination = float(destination.split(",")[1])
+
+    data = urlopen(f'http://localhost:8080/car?latFrom={lat_start}&lonFrom={lon_start}&latTo={lat_destination}&lonTo={lon_destination}&mode=driving').read()
+    print(data)
+    return JsonResponse(json.loads(data))
+
+
+def oldAjaxCall(request):
     starting = request.GET.get('starting', None)
     destination = request.GET.get('destination', None)
     mode = request.GET.get('mode', None)
@@ -28,6 +48,8 @@ def ajaxCall(request):
     router 			= past2.Router(mode) # Initialise it
     start 			= router.data.findNode(lat_start,lon_start) # Find start and end nodes
     end 			= router.data.findNode(lat_destination, lon_destination)
+    #start 			= router.data.findNode(25.042574,121.614649)
+    #end 			= router.data.findNode(25.055222,121.617254)
     start_hour 		= 0
     start_minute 	= 0
     numNeighbor = 1
