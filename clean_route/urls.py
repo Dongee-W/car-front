@@ -22,5 +22,6 @@ urlpatterns = [
     path('', views.planCleanRoute),
     path('feedback', views.feedback),
     path('ajax/car', views.ajaxCall),
-    path('ajax/google', views.google),
+    path('ajax/google', views.ajaxGoogle),
+    path('ajax/fastest', views.ajaxFastest),
 ]

@@ -56,13 +56,9 @@
                           <i class="male icon"></i>
                           Walking
                         </div>
-                        <div class="item" data-value="cycle">
+                        <div class="item" data-value="bike">
                           <i class="bicycle icon"></i>
                           Bicycling
-                        </div>
-                        <div class="item" data-value="scooter">
-                            <i class="motorcycle icon"></i>
-                            Motorcycling
                         </div>
                       </div>
                     </div>
@@ -124,6 +120,7 @@
             var marker2;
             var popup1;
             var popup2;
+            var popup3;
             mapboxgl.accessToken = 'pk.eyJ1IjoiaGFycnl0aGVtYXBjb2xsZWN0b3IiLCJhIjoiY2phNjg4NGZjM2plajJxbDc3emgxNXd5bCJ9.0YwLUH-n_PyboM3gTZtTeg';
             var map = new mapboxgl.Map({
                 container: 'map',
@@ -198,11 +195,20 @@
                 if (map.getSource("route1") !== undefined) map.removeSource("route1");
                 if (map.getLayer("route2") !== undefined) map.removeLayer("route2");
                 if (map.getSource("route2") !== undefined) map.removeSource("route2");
+                if (map.getLayer("route3") !== undefined) map.removeLayer("route3");
+                if (map.getSource("route3") !== undefined) map.removeSource("route3");
                 if (marker1 !== undefined) marker1.remove();
                 if (marker2 !== undefined) marker2.remove();
                 if (popup1 !== undefined) popup1.remove();
                 if (popup2 !== undefined) popup2.remove();
+                if (popup3 !== undefined) popup3.remove();
                 $("#inner").empty()
+
+                var transportMapper = function(mode) {
+                    if (mode == "car") return "car"
+                    else if (mode == "foot") return "male"
+                    else return "bicycle"
+                }
 
                 // Sent routing request through ajax. (Google)
                 $.ajax({
@@ -214,7 +220,7 @@
                     },
                     dataType: 'json',
                     success: function (data) {
-                        var path = data["google"].map(function(x) {
+                        var path = data["route"]["path"].map(function(x) {
                             return [x[1], x[0]];
                         })
                         map.addLayer({
@@ -242,11 +248,61 @@
                             }
                         });
                         
-                        var gd = data['google_distance']
-                        var gp = data['google_pm25']
+                        var gd = Math.round(data["route"]["total_distance"]/100) / 10
+                        var gp = Math.round(data["route"]['total_pm25'] / 100) / 10
+                        var gt = Math.round(data["route"]['total_time'] / 60)
                         popup2 = new mapboxgl.Popup({closeButton: false})
                             .setLngLat(path[Math.round(path.length / 2)])
-                            .setHTML('<div class="ui large list cute"><div class="item">Google</div><div class="item"><i class="car icon"></i> ' + gd + 'km, ' + data["google_time"] + '</div><div class="item">PM2.5 exposure: ' + gp + '</div></div>')
+                            .setHTML('<div class="ui large list cute"><div class="item">Google</div><div class="item"><i class="'+ transportMapper($("#mode").attr("value")) +' icon"></i> ' + gd + 'km, ' + gt + ' mins</div><div class="item">PM2.5 exposure: ' + gp + '</div></div>')
+                            .addTo(map);
+                        
+                    }
+                });
+                // Sent routing request through ajax. (Fastest)
+                $.ajax({
+                    url: '/ajax/fastest',
+                    data: {
+                        "starting": $("#starting").val(),
+                        "destination": $("#destination").val(),
+                        "mode": $("#mode").attr("value")
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        console.log(data)
+                        var CAR = data["route"]["path"].map(function(x) {
+                            return [x[1], x[0]];
+                        })
+                        map.addLayer({
+                            "id": "route3",
+                            "type": "line",
+                            "source": {
+                                "type": "geojson",
+                                "data": {
+                                    "type": "Feature",
+                                    "properties": {},
+                                    "geometry": {
+                                        "type": "LineString",
+                                        "coordinates": CAR
+                                    }
+                                }
+                            },
+                            "layout": {
+                                "line-join": "round",
+                                "line-cap": "round"
+                            },
+                            "paint": {
+                                "line-color": "#666666",
+                                "line-width": 6,
+                                "line-opacity": 0.9
+                            }
+                        });
+                        
+                        var fd = Math.round(data["route"]["total_distance"]/100) / 10
+                        var fp = Math.round(data["route"]['total_pm25'] / 100) / 10
+                        var ft = Math.round(data["route"]['total_time'] / 60)
+                        popup3 = new mapboxgl.Popup({closeButton: false})
+                            .setLngLat(CAR[Math.round(CAR.length / 2)])
+                            .setHTML('<div class="ui large list cute"><div class="item">Fastest</div><div class="item"><i class="'+ transportMapper($("#mode").attr("value")) +' icon"></i> ' +  fd + 'km, ' + ft + ' mins</div><div class="item">PM2.5 exposure: ' + fp +'</div></div>')
                             .addTo(map);
                         
                     }
@@ -365,10 +421,10 @@
                         
                         var cd = Math.round(data["route"]["total_distance"]/100) / 10
                         var cp = Math.round(data["route"]['total_pm25'] / 100) / 10
-                        var ct = Math.round(data["route"]['total_time'] / 60000)
+                        var ct = Math.round(data["route"]['total_time'] / 60)
                         popup1 = new mapboxgl.Popup({closeButton: false})
                             .setLngLat(CAR[Math.round(CAR.length / 2)])
-                            .setHTML('<div class="ui large list cute"><div class="item">CAR</div><div class="item"><i class="' + 'car' +' icon"></i> ' +  cd + 'km, ' + ct + ' mins</div><div class="item">PM2.5 exposure: ' + cp +'</div></div>')
+                            .setHTML('<div class="ui large list cute"><div class="item">CAR</div><div class="item"><i class="'+ transportMapper($("#mode").attr("value")) +' icon"></i> ' +  cd + 'km, ' + ct + ' mins</div><div class="item">PM2.5 exposure: ' + cp +'</div></div>')
                             .addTo(map);
                         
                       } else {
