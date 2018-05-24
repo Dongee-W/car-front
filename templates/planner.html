@@ -21,6 +21,7 @@
             crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
     
+    
 
     <!--[if lt IE 9]>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
@@ -220,6 +221,7 @@
                     },
                     dataType: 'json',
                     success: function (data) {
+                        console.log("Google returned.")
                         var path = data["route"]["path"].map(function(x) {
                             return [x[1], x[0]];
                         })
@@ -268,7 +270,7 @@
                     },
                     dataType: 'json',
                     success: function (data) {
-                        console.log(data)
+                        console.log("Fastest returned.")
                         var CAR = data["route"]["path"].map(function(x) {
                             return [x[1], x[0]];
                         })
@@ -317,7 +319,7 @@
                     },
                     dataType: 'json',
                     success: function (data) {
-                      console.log("Ajax returned.")
+                      console.log("CAR returned.")
                       $("#loader").css("display", "none")
                       $("#detailedDirections").css("display", "block")
                       $("#start").text($("#starting").val())
@@ -443,8 +445,15 @@
                     }
                 });
             });
-            
+            function initMap() {
+                var inputFrom = document.getElementById('starting');
+                var inputTo = document.getElementById('destination');
+                var autocompleteFrom = new google.maps.places.Autocomplete(inputFrom);
+                var autocompleteTo = new google.maps.places.Autocomplete(inputTo);
+            }
 
         </script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBq_xgj2PdOr0FPm6v1-oGG9Z1ILCtCsh8&libraries=places&callback=initMap"
+        async defer></script>
     </body>
 </html>

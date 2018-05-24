@@ -37,24 +37,24 @@ def ajaxCall(request):
             data = urlopen(f'http://localhost:8080/car?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode={mode}').read()
             res = JsonResponse(json.loads(data))
         except:
-            res = JsonResponse({"status": "UNKNOWN_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+            res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
     else:
         # Make safe for use as URL
         urlSaveFrom = urllib.parse.quote(starting)
         urlSaveTo = urllib.parse.quote(destination)
 
         # Geocoding
-        codingFrom = urlopen(f'https://graphhopper.com/api/1/geocode?q={urlSaveFrom}&locale=en&key=81975b92-1fe0-46f0-a9d9-a0bd40d90a46').read()
-        codingTo= urlopen(f'https://graphhopper.com/api/1/geocode?q={urlSaveTo}&locale=en&key=81975b92-1fe0-46f0-a9d9-a0bd40d90a46').read()
+        codingFrom = urlopen(f'https://maps.googleapis.com/maps/api/geocode/json?address={urlSaveFrom}&key=AIzaSyBq_xgj2PdOr0FPm6v1-oGG9Z1ILCtCsh8').read()
+        codingTo= urlopen(f'https://maps.googleapis.com/maps/api/geocode/json?address={urlSaveTo}&key=AIzaSyBq_xgj2PdOr0FPm6v1-oGG9Z1ILCtCsh8').read()
 
         resultFrom = json.loads(codingFrom)
         resultTo = json.loads(codingTo)
 
-        if (len(resultFrom['hits']) > 0) and (len(resultTo['hits']) > 0):
-            latFrom = resultFrom['hits'][0]['point']['lat']
-            lonFrom = resultFrom['hits'][0]['point']['lng']
-            latTo = resultTo['hits'][0]['point']['lat']
-            lonTo = resultTo['hits'][0]['point']['lng']
+        if (resultFrom['status'] == "OK") and (resultTo['status'] == "OK"):
+            latFrom = resultFrom['results'][0]["geometry"]['location']['lat']
+            lonFrom = resultFrom['results'][0]["geometry"]['location']['lng']
+            latTo = resultTo['results'][0]["geometry"]['location']['lat']
+            lonTo = resultTo['results'][0]["geometry"]['location']['lng']
 
             print(str(latFrom) + "," + str(lonFrom))
             print(str(latTo) + "," + str(lonTo))
@@ -63,7 +63,7 @@ def ajaxCall(request):
                 data = urlopen(f'http://localhost:8080/car?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode={mode}').read()
                 res = JsonResponse(json.loads(data))
             except:
-                res = JsonResponse({"status": "UNKNOWN_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+                res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
             
         else :
             res = JsonResponse({"status": "NOT_FOUND", "message": "Cannot locate starting point or destination.", "route": None})
@@ -85,7 +85,7 @@ def ajaxGoogle(request):
             data = urlopen(f'http://localhost:8080/google?from={urlSaveFrom}&to={urlSaveTo}&mode={mode}').read()
             res = JsonResponse(json.loads(data))
         except:
-            res = JsonResponse({"status": "UNKNOWN_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+            res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
     return res
 
 def ajaxFastest(request):
@@ -103,31 +103,29 @@ def ajaxFastest(request):
         lonFrom = matchedFrom.group(2)
         latTo = matchedTo.group(1)
         lonTo = matchedTo.group(2)
-        print(str(latFrom) + "," + str(lonFrom))
-        print(str(latTo) + "," + str(lonTo))
+        
         try:
             data = urlopen(f'http://localhost:8080/fastest?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode={mode}').read()
             res = JsonResponse(json.loads(data))
         except:
-            res = JsonResponse({"status": "UNKNOWN_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+            res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
     else:
         # Make safe for use as URL
         urlSaveFrom = urllib.parse.quote(starting)
         urlSaveTo = urllib.parse.quote(destination)
 
         # Geocoding
-        codingFrom = urlopen(f'https://graphhopper.com/api/1/geocode?q={urlSaveFrom}&locale=en&key=81975b92-1fe0-46f0-a9d9-a0bd40d90a46').read()
-        codingTo= urlopen(f'https://graphhopper.com/api/1/geocode?q={urlSaveTo}&locale=en&key=81975b92-1fe0-46f0-a9d9-a0bd40d90a46').read()
+        codingFrom = urlopen(f'https://maps.googleapis.com/maps/api/geocode/json?address={urlSaveFrom}&key=AIzaSyBq_xgj2PdOr0FPm6v1-oGG9Z1ILCtCsh8').read()
+        codingTo= urlopen(f'https://maps.googleapis.com/maps/api/geocode/json?address={urlSaveTo}&key=AIzaSyBq_xgj2PdOr0FPm6v1-oGG9Z1ILCtCsh8').read()
 
         resultFrom = json.loads(codingFrom)
         resultTo = json.loads(codingTo)
 
-        if (len(resultFrom['hits']) > 0) and (len(resultTo['hits']) > 0):
-            latFrom = resultFrom['hits'][0]['point']['lat']
-            lonFrom = resultFrom['hits'][0]['point']['lng']
-            latTo = resultTo['hits'][0]['point']['lat']
-            lonTo = resultTo['hits'][0]['point']['lng']
-
+        if (resultFrom['status'] == "OK") and (resultTo['status'] == "OK"):
+            latFrom = resultFrom['results'][0]["geometry"]['location']['lat']
+            lonFrom = resultFrom['results'][0]["geometry"]['location']['lng']
+            latTo = resultTo['results'][0]["geometry"]['location']['lat']
+            lonTo = resultTo['results'][0]["geometry"]['location']['lng']
             print(str(latFrom) + "," + str(lonFrom))
             print(str(latTo) + "," + str(lonTo))
             
@@ -135,7 +133,7 @@ def ajaxFastest(request):
                 data = urlopen(f'http://localhost:8080/fastest?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode={mode}').read()
                 res = JsonResponse(json.loads(data))
             except:
-                res = JsonResponse({"status": "UNKNOWN_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+                res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
             
         else :
             res = JsonResponse({"status": "NOT_FOUND", "message": "Cannot locate starting point or destination.", "route": None})
