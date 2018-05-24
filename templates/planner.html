@@ -253,7 +253,7 @@
                         var gt = Math.round(data["route"]['total_time'] / 60)
                         popup2 = new mapboxgl.Popup({closeButton: false})
                             .setLngLat(path[Math.round(path.length / 2)])
-                            .setHTML('<div class="ui large list cute"><div class="item">Google</div><div class="item"><i class="'+ transportMapper($("#mode").attr("value")) +' icon"></i> ' + gd + 'km, ' + gt + ' mins</div><div class="item">PM2.5 exposure: ' + gp + '</div></div>')
+                            .setHTML('<div class="ui large list cute"><div class="item">Google</div><div class="item"><i class="'+ transportMapper($("#mode").attr("value")) +' icon"></i> ' + gd + 'km</div><div class="item">PM2.5 exposure: ' + gp + '</div></div>')
                             .addTo(map);
                         
                     }
@@ -301,7 +301,7 @@
                         var fp = Math.round(data["route"]['total_pm25'] / 100) / 10
                         var ft = Math.round(data["route"]['total_time'] / 60)
                         popup3 = new mapboxgl.Popup({closeButton: false})
-                            .setLngLat(CAR[Math.round(CAR.length / 2)])
+                            .setLngLat(CAR[Math.round(CAR.length / 4)])
                             .setHTML('<div class="ui large list cute"><div class="item">Fastest</div><div class="item"><i class="'+ transportMapper($("#mode").attr("value")) +' icon"></i> ' +  fd + 'km, ' + ft + ' mins</div><div class="item">PM2.5 exposure: ' + fp +'</div></div>')
                             .addTo(map);
                         
@@ -423,7 +423,7 @@
                         var cp = Math.round(data["route"]['total_pm25'] / 100) / 10
                         var ct = Math.round(data["route"]['total_time'] / 60)
                         popup1 = new mapboxgl.Popup({closeButton: false})
-                            .setLngLat(CAR[Math.round(CAR.length / 2)])
+                            .setLngLat(CAR[Math.round(CAR.length / 1.5)])
                             .setHTML('<div class="ui large list cute"><div class="item">CAR</div><div class="item"><i class="'+ transportMapper($("#mode").attr("value")) +' icon"></i> ' +  cd + 'km, ' + ct + ' mins</div><div class="item">PM2.5 exposure: ' + cp +'</div></div>')
                             .addTo(map);
                         
@@ -432,9 +432,9 @@
                         <div class="ui negative message">
                             <i class="close icon"></i>
                             <div class="header">
-                                We're sorry we can't find the route.
+                                ${data["status"]}
                             </div>
-                            <p>${data["status"]}
+                            <p>We're sorry we can't find the route due to ${data["message"]}
                         </p></div>
                           `)
                       }
