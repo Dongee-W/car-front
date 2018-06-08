@@ -33,8 +33,7 @@ def feedback(request):
 
     cursor.close()
     cnx.close()
-
-    #data = [{"stars": 5, "comment": "Very good", "timestamp": "2018-06-09 12:22", "icon": random.choice(list)}, {"stars": 3, "comment": "Its OK", "timestamp": "2018-02-03 19:00", "icon": random.choice(list)}]
+    data.reverse()
 
     context = {'feedbacks': data}
 
@@ -176,6 +175,7 @@ def addFeedback(request):
 
     cursor.close()
     cnx.close()
+    return HttpResponse("")
 
 
 def oldAjaxCall(request):
