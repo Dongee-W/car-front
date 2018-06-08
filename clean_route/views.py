@@ -4,6 +4,7 @@ from django.http import HttpResponse
 
 from urllib.request import urlopen
 import urllib
+import random
 
 import json
 import re
@@ -15,7 +16,28 @@ def planCleanRoute(request):
     return render(request, 'planner.html', context)
 
 def feedback(request):
-    context = {}
+    list = ["comment", "user", "pencil"]
+    
+    import mysql.connector
+    cnx = mysql.connector.connect(user="root", password="iisnrl", host='127.0.0.1', database="feedback")
+    cursor = cnx.cursor()
+
+    query = "select STARS, COMMENT, DATE_FORMAT(TIMESTAMP, '%Y-%m-%d %H:%i') from feedback"
+
+    cursor.execute(query)
+
+    data = []
+    for (stars, comment, timestamp) in cursor:
+        record = {"stars": int(stars), "comment": comment, "timestamp": timestamp, "icon": random.choice(list)}
+        data.append(record)
+
+    cursor.close()
+    cnx.close()
+
+    #data = [{"stars": 5, "comment": "Very good", "timestamp": "2018-06-09 12:22", "icon": random.choice(list)}, {"stars": 3, "comment": "Its OK", "timestamp": "2018-02-03 19:00", "icon": random.choice(list)}]
+
+    context = {'feedbacks': data}
+
     return render(request, 'feedback.html', context)
 
 def ajaxCall(request):
@@ -138,6 +160,23 @@ def ajaxFastest(request):
         else :
             res = JsonResponse({"status": "NOT_FOUND", "message": "Cannot locate starting point or destination.", "route": None})
     return res
+
+def addFeedback(request):
+    stars = request.GET.get('stars', None)
+    comment = request.GET.get('comment', None)
+
+    import mysql.connector
+    cnx = mysql.connector.connect(user="root", password="iisnrl", host='127.0.0.1', database="feedback")
+    cursor = cnx.cursor()
+    add_readings = "INSERT INTO feedback (STARS, COMMENT, TIMESTAMP) VALUES(%s, %s, NOW());"
+    data_readings = (stars, comment)
+    cursor.execute(add_readings, data_readings)
+
+    cnx.commit()
+
+    cursor.close()
+    cnx.close()
+
 
 def oldAjaxCall(request):
     starting = request.GET.get('starting', None)

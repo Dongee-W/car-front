@@ -27,115 +27,34 @@
     <div class="ui container">
         <h1 class="ui blue huge center aligned header" id="header">Feedback from users</h1>
         <div class="ui fluid action right labeled input">
-            <input type="text" placeholder="Comment">
-            <div class="ui star rating label" data-rating="3"></div>
-            <div class="ui blue button">Post</div>
+            <input type="text" placeholder="Comment" id="textInput">
+            <div class="ui star rating label" data-rating="3" id="rator"></div>
+            <div class="ui blue button" id="postButton">Post</div>
         </div>
         <div class="ui feed">
+          {% for feedback in feedbacks %}
             <div class="event">
               <div class="label">
-                <i class="comment icon"></i>
+                <i class="{{feedback.icon}} icon"></i>
               </div>
               <div class="content">
                 <div class="summary">
                   <a class="user">
-                    Elliot Fu
-                  </a> added you as a friend
+                    Anonymous
+                  </a> added a new comment
                   <div class="date">
-                    1 Hour Ago
+                    {{feedback.timestamp}}
                   </div>
                 </div>
                 <div class="meta">
-                  <div class="ui star rating" data-rating="3"></div>
-                </div>
-              </div>
-            </div>
-            <div class="event">
-              <div class="label">
-                <i class="user icon"></i>
-              </div>
-              <div class="content">
-                <div class="summary">
-                  <a>Helen Troy</a> added <a>2 new illustrations</a>
-                  <div class="date">
-                    4 days ago
-                  </div>
-                </div>
-                <div class="extra images">
-                  <a><img src="/images/wireframe/image.png"></a>
-                  <a><img src="/images/wireframe/image.png"></a>
-                </div>
-                <div class="meta">
-                  <a class="like">
-                    <i class="like icon"></i> 1 Like
-                  </a>
-                </div>
-              </div>
-            </div>
-            <div class="event">
-              <div class="label">
-                <i class="pencil icon"></i>
-              </div>
-              <div class="content">
-                <div class="summary">
-                  <a class="user">
-                    Jenny Hess
-                  </a> added you as a friend
-                  <div class="date">
-                    2 Days Ago
-                  </div>
-                </div>
-                <div class="meta">
-                  <a class="like">
-                    <i class="like icon"></i> 8 Likes
-                  </a>
-                </div>
-              </div>
-            </div>
-            <div class="event">
-              <div class="label">
-                <i class="pencil icon"></i>
-              </div>
-              <div class="content">
-                <div class="summary">
-                  <a>Joe Henderson</a> posted on his page
-                  <div class="date">
-                    3 days ago
-                  </div>
+                  <div class="ui star rating" data-rating="{{feedback.stars}}"></div>
                 </div>
                 <div class="extra text">
-                  Ours is a life of constant reruns. We're always circling back to where we'd we started, then starting all over again. Even if we don't run extra laps that day, we surely will come back for more of the same another day soon.
-                </div>
-                <div class="meta">
-                  <a class="like">
-                    <i class="like icon"></i> 5 Likes
-                  </a>
+                  {{feedback.comment}}
                 </div>
               </div>
             </div>
-            <div class="event">
-              <div class="label">
-                <i class="comment icon"></i>
-              </div>
-              <div class="content">
-                <div class="summary">
-                  <a>Justen Kitsune</a> added <a>2 new photos</a> of you
-                  <div class="date">
-                    4 days ago
-                  </div>
-                </div>
-                <div class="extra images">
-                  <a><img src="/images/wireframe/image.png"></a>
-                  <a><img src="/images/wireframe/image.png"></a>
-                </div>
-                <div class="meta">
-                  <a class="like">
-                    <i class="like icon"></i> 41 Likes
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
+            {% endfor %}
     </div>
     <script>
         
@@ -149,6 +68,20 @@
                 initialRating: 0,
                 maxRating: 5
             }).rating('disable');
+
+        $('#postButton').click(function() {
+          $.ajax({
+            url: '/add_feedback',
+            data: {
+                "comment": $("#textInput").val(),
+                "stars": $('#rator').rating('get rating')
+            },
+            dataType: 'json',
+            success: function (data) {
+              console.log("Finished.")
+            }
+        });
+        })
     </script>
 </body>
 

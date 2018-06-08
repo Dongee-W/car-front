@@ -24,4 +24,5 @@ urlpatterns = [
     path('ajax/car', views.ajaxCall),
     path('ajax/google', views.ajaxGoogle),
     path('ajax/fastest', views.ajaxFastest),
+    path('add_feedback', views.addFeedback)
 ]
