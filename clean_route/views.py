@@ -175,7 +175,7 @@ def addFeedback(request):
 
     cursor.close()
     cnx.close()
-    return HttpResponse("")
+    return JsonResponse({"status": "success"})
 
 
 def oldAjaxCall(request):
