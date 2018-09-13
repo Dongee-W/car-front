@@ -160,6 +160,57 @@ def ajaxFastest(request):
             res = JsonResponse({"status": "NOT_FOUND", "message": "Cannot locate starting point or destination.", "route": None})
     return res
 
+def ajaxShortest(request):
+    starting = request.GET.get('starting', None)
+    destination = request.GET.get('destination', None)
+    mode = request.GET.get('mode', None)
+
+    p = re.compile('^(\d+\.*\d+),(\d+\.*\d+)$')
+    matchedFrom = p.match(starting)
+    matchedTo = p.match(destination)
+
+    # See if already geoencoded
+    if matchedFrom and matchedTo:
+        latFrom = matchedFrom.group(1)
+        lonFrom = matchedFrom.group(2)
+        latTo = matchedTo.group(1)
+        lonTo = matchedTo.group(2)
+        
+        try:
+            data = urlopen(f'http://localhost:8080/shortest?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode={mode}').read()
+            res = JsonResponse(json.loads(data))
+        except:
+            res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+    else:
+        # Make safe for use as URL
+        urlSaveFrom = urllib.parse.quote(starting)
+        urlSaveTo = urllib.parse.quote(destination)
+
+        # Geocoding
+        codingFrom = urlopen(f'https://maps.googleapis.com/maps/api/geocode/json?address={urlSaveFrom}&key=AIzaSyBq_xgj2PdOr0FPm6v1-oGG9Z1ILCtCsh8').read()
+        codingTo= urlopen(f'https://maps.googleapis.com/maps/api/geocode/json?address={urlSaveTo}&key=AIzaSyBq_xgj2PdOr0FPm6v1-oGG9Z1ILCtCsh8').read()
+
+        resultFrom = json.loads(codingFrom)
+        resultTo = json.loads(codingTo)
+
+        if (resultFrom['status'] == "OK") and (resultTo['status'] == "OK"):
+            latFrom = resultFrom['results'][0]["geometry"]['location']['lat']
+            lonFrom = resultFrom['results'][0]["geometry"]['location']['lng']
+            latTo = resultTo['results'][0]["geometry"]['location']['lat']
+            lonTo = resultTo['results'][0]["geometry"]['location']['lng']
+            print(str(latFrom) + "," + str(lonFrom))
+            print(str(latTo) + "," + str(lonTo))
+            
+            try:
+                data = urlopen(f'http://localhost:8080/shortest?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode={mode}').read()
+                res = JsonResponse(json.loads(data))
+            except:
+                res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+            
+        else :
+            res = JsonResponse({"status": "NOT_FOUND", "message": "Cannot locate starting point or destination.", "route": None})
+    return res
+
 def addFeedback(request):
     stars = request.GET.get('stars', None)
     comment = request.GET.get('comment', None)
