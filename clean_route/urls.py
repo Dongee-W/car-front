@@ -20,5 +20,10 @@ from . import views
 
 urlpatterns = [
     path('', views.planCleanRoute),
-    path('ajax/planning', views.ajaxCall),
+    path('feedback', views.feedback),
+    path('ajax/car', views.ajaxCall),
+    path('ajax/google', views.ajaxGoogle),
+    path('ajax/fastest', views.ajaxFastest),
+    path('ajax/shortest', views.ajaxShortest),
+    path('add_feedback', views.addFeedback)
 ]

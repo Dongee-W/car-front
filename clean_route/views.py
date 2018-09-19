@@ -1,5 +1,13 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.http import HttpResponse
+
+from urllib.request import urlopen
+import urllib
+import random
+
+import json
+import re
 
 from . import past2
 
@@ -7,7 +15,221 @@ def planCleanRoute(request):
     context = {}
     return render(request, 'planner.html', context)
 
+def feedback(request):
+    list = ["comment", "user", "pencil"]
+    
+    import mysql.connector
+    cnx = mysql.connector.connect(user="root", password="iisnrl", host='127.0.0.1', database="feedback")
+    cursor = cnx.cursor()
+
+    query = "select STARS, COMMENT, DATE_FORMAT(TIMESTAMP, '%Y-%m-%d %H:%i') from feedback"
+
+    cursor.execute(query)
+
+    data = []
+    for (stars, comment, timestamp) in cursor:
+        record = {"stars": int(stars), "comment": comment, "timestamp": timestamp, "icon": random.choice(list)}
+        data.append(record)
+
+    cursor.close()
+    cnx.close()
+    data.reverse()
+
+    context = {'feedbacks': data}
+
+    return render(request, 'feedback.html', context)
+
 def ajaxCall(request):
+    starting = request.GET.get('starting', None)
+    destination = request.GET.get('destination', None)
+    mode = request.GET.get('mode', None)
+
+    p = re.compile('^(\d+\.*\d+),(\d+\.*\d+)$')
+    matchedFrom = p.match(starting)
+    matchedTo = p.match(destination)
+
+    # See if already geoencoded
+    if matchedFrom and matchedTo:
+        latFrom = matchedFrom.group(1)
+        lonFrom = matchedFrom.group(2)
+        latTo = matchedTo.group(1)
+        lonTo = matchedTo.group(2)
+        try:
+            data = urlopen(f'http://localhost:8080/car?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode={mode}').read()
+            res = JsonResponse(json.loads(data))
+        except:
+            res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+    else:
+        # Make safe for use as URL
+        urlSaveFrom = urllib.parse.quote(starting)
+        urlSaveTo = urllib.parse.quote(destination)
+
+        # Geocoding
+        codingFrom = urlopen(f'https://maps.googleapis.com/maps/api/geocode/json?address={urlSaveFrom}&key=AIzaSyBq_xgj2PdOr0FPm6v1-oGG9Z1ILCtCsh8').read()
+        codingTo= urlopen(f'https://maps.googleapis.com/maps/api/geocode/json?address={urlSaveTo}&key=AIzaSyBq_xgj2PdOr0FPm6v1-oGG9Z1ILCtCsh8').read()
+
+        resultFrom = json.loads(codingFrom)
+        resultTo = json.loads(codingTo)
+
+        if (resultFrom['status'] == "OK") and (resultTo['status'] == "OK"):
+            latFrom = resultFrom['results'][0]["geometry"]['location']['lat']
+            lonFrom = resultFrom['results'][0]["geometry"]['location']['lng']
+            latTo = resultTo['results'][0]["geometry"]['location']['lat']
+            lonTo = resultTo['results'][0]["geometry"]['location']['lng']
+
+            print(str(latFrom) + "," + str(lonFrom))
+            print(str(latTo) + "," + str(lonTo))
+            
+            try:
+                data = urlopen(f'http://localhost:8080/car?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode={mode}').read()
+                res = JsonResponse(json.loads(data))
+            except:
+                res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+            
+        else :
+            res = JsonResponse({"status": "NOT_FOUND", "message": "Cannot locate starting point or destination.", "route": None})
+    
+    return res
+
+def ajaxGoogle(request):
+    starting = request.GET.get('starting', None)
+    destination = request.GET.get('destination', None)
+    mode = request.GET.get('mode', None)
+
+    # Make safe for use as URL
+    urlSaveFrom = urllib.parse.quote(starting)
+    urlSaveTo = urllib.parse.quote(destination)
+    if mode == "bike":
+        res = JsonResponse({"status": "INVALID_REQUEST", "message": "Bike mode is not available for Google api", "route": None})
+    else:
+        try:
+            data = urlopen(f'http://localhost:8080/google?from={urlSaveFrom}&to={urlSaveTo}&mode={mode}').read()
+            res = JsonResponse(json.loads(data))
+        except:
+            res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+    return res
+
+def ajaxFastest(request):
+    starting = request.GET.get('starting', None)
+    destination = request.GET.get('destination', None)
+    mode = request.GET.get('mode', None)
+
+    p = re.compile('^(\d+\.*\d+),(\d+\.*\d+)$')
+    matchedFrom = p.match(starting)
+    matchedTo = p.match(destination)
+
+    # See if already geoencoded
+    if matchedFrom and matchedTo:
+        latFrom = matchedFrom.group(1)
+        lonFrom = matchedFrom.group(2)
+        latTo = matchedTo.group(1)
+        lonTo = matchedTo.group(2)
+        
+        try:
+            data = urlopen(f'http://localhost:8080/fastest?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode={mode}').read()
+            res = JsonResponse(json.loads(data))
+        except:
+            res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+    else:
+        # Make safe for use as URL
+        urlSaveFrom = urllib.parse.quote(starting)
+        urlSaveTo = urllib.parse.quote(destination)
+
+        # Geocoding
+        codingFrom = urlopen(f'https://maps.googleapis.com/maps/api/geocode/json?address={urlSaveFrom}&key=AIzaSyBq_xgj2PdOr0FPm6v1-oGG9Z1ILCtCsh8').read()
+        codingTo= urlopen(f'https://maps.googleapis.com/maps/api/geocode/json?address={urlSaveTo}&key=AIzaSyBq_xgj2PdOr0FPm6v1-oGG9Z1ILCtCsh8').read()
+
+        resultFrom = json.loads(codingFrom)
+        resultTo = json.loads(codingTo)
+
+        if (resultFrom['status'] == "OK") and (resultTo['status'] == "OK"):
+            latFrom = resultFrom['results'][0]["geometry"]['location']['lat']
+            lonFrom = resultFrom['results'][0]["geometry"]['location']['lng']
+            latTo = resultTo['results'][0]["geometry"]['location']['lat']
+            lonTo = resultTo['results'][0]["geometry"]['location']['lng']
+            print(str(latFrom) + "," + str(lonFrom))
+            print(str(latTo) + "," + str(lonTo))
+            
+            try:
+                data = urlopen(f'http://localhost:8080/fastest?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode={mode}').read()
+                res = JsonResponse(json.loads(data))
+            except:
+                res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+            
+        else :
+            res = JsonResponse({"status": "NOT_FOUND", "message": "Cannot locate starting point or destination.", "route": None})
+    return res
+
+def ajaxShortest(request):
+    starting = request.GET.get('starting', None)
+    destination = request.GET.get('destination', None)
+    mode = request.GET.get('mode', None)
+
+    p = re.compile('^(\d+\.*\d+),(\d+\.*\d+)$')
+    matchedFrom = p.match(starting)
+    matchedTo = p.match(destination)
+
+    # See if already geoencoded
+    if matchedFrom and matchedTo:
+        latFrom = matchedFrom.group(1)
+        lonFrom = matchedFrom.group(2)
+        latTo = matchedTo.group(1)
+        lonTo = matchedTo.group(2)
+        
+        try:
+            data = urlopen(f'http://localhost:8080/shortest?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode={mode}').read()
+            res = JsonResponse(json.loads(data))
+        except:
+            res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+    else:
+        # Make safe for use as URL
+        urlSaveFrom = urllib.parse.quote(starting)
+        urlSaveTo = urllib.parse.quote(destination)
+
+        # Geocoding
+        codingFrom = urlopen(f'https://maps.googleapis.com/maps/api/geocode/json?address={urlSaveFrom}&key=AIzaSyBq_xgj2PdOr0FPm6v1-oGG9Z1ILCtCsh8').read()
+        codingTo= urlopen(f'https://maps.googleapis.com/maps/api/geocode/json?address={urlSaveTo}&key=AIzaSyBq_xgj2PdOr0FPm6v1-oGG9Z1ILCtCsh8').read()
+
+        resultFrom = json.loads(codingFrom)
+        resultTo = json.loads(codingTo)
+
+        if (resultFrom['status'] == "OK") and (resultTo['status'] == "OK"):
+            latFrom = resultFrom['results'][0]["geometry"]['location']['lat']
+            lonFrom = resultFrom['results'][0]["geometry"]['location']['lng']
+            latTo = resultTo['results'][0]["geometry"]['location']['lat']
+            lonTo = resultTo['results'][0]["geometry"]['location']['lng']
+            print(str(latFrom) + "," + str(lonFrom))
+            print(str(latTo) + "," + str(lonTo))
+            
+            try:
+                data = urlopen(f'http://localhost:8080/shortest?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode={mode}').read()
+                res = JsonResponse(json.loads(data))
+            except:
+                res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+            
+        else :
+            res = JsonResponse({"status": "NOT_FOUND", "message": "Cannot locate starting point or destination.", "route": None})
+    return res
+
+def addFeedback(request):
+    stars = request.GET.get('stars', None)
+    comment = request.GET.get('comment', None)
+
+    import mysql.connector
+    cnx = mysql.connector.connect(user="root", password="iisnrl", host='127.0.0.1', database="feedback")
+    cursor = cnx.cursor()
+    add_readings = "INSERT INTO feedback (STARS, COMMENT, TIMESTAMP) VALUES(%s, %s, NOW());"
+    data_readings = (stars, comment)
+    cursor.execute(add_readings, data_readings)
+
+    cnx.commit()
+
+    cursor.close()
+    cnx.close()
+    return JsonResponse({"status": "success"})
+
+
+def oldAjaxCall(request):
     starting = request.GET.get('starting', None)
     destination = request.GET.get('destination', None)
     mode = request.GET.get('mode', None)
@@ -24,6 +246,8 @@ def ajaxCall(request):
     router 			= past2.Router(mode) # Initialise it
     start 			= router.data.findNode(lat_start,lon_start) # Find start and end nodes
     end 			= router.data.findNode(lat_destination, lon_destination)
+    #start 			= router.data.findNode(25.042574,121.614649)
+    #end 			= router.data.findNode(25.055222,121.617254)
     start_hour 		= 0
     start_minute 	= 0
     numNeighbor = 1

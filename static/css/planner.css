@@ -5,8 +5,13 @@
 
 #detail {
     position: absolute;
-    top: 40px; left: 40px;
+    top: 40px; left: 0px;
     display: none;
+}
+
+#feedback {
+    position: absolute;
+    right: 300px; bottom: 00px;
 }
 
 .credit {
