@@ -429,7 +429,7 @@
                         var ct = Math.round(data["route"]['total_time'] / 60)
                         popup1 = new mapboxgl.Popup({closeButton: true, closeOnClick: false})
                             .setLngLat(CAR[Math.round(CAR.length / 1.5)])
-                            .setHTML('<div class="ui large list cute"><div class="item" style="color:#120cb7;">CAR (Recommended)</div><div class="item"><i class="'+ transportMapper($("#mode").attr("value")) +' icon"></i> ' +  cd + 'km, ' + ct + ' mins</div><div class="item">PM2.5 exposure: ' + cp +'</div></div>')
+                            .setHTML('<div class="ui large list cute"><div class="item" style="color:#120cb7;">CAR</div><div class="item"><i class="'+ transportMapper($("#mode").attr("value")) +' icon"></i> ' +  cd + 'km, ' + ct + ' mins</div><div class="item">PM2.5 exposure: ' + cp +'</div></div>')
                             .addTo(map);
                         
                       } else {

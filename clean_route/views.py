@@ -84,7 +84,7 @@ def ajaxCall(request):
                 data = urlopen(f'http://localhost:8080/car?latFrom={latFrom}&lonFrom={lonFrom}&latTo={latTo}&lonTo={lonTo}&mode={mode}').read()
                 res = JsonResponse(json.loads(data))
             except:
-                res = JsonResponse({"status": "SERVER_ERROR", "message": "Routing service is unavailable right now.", "route": None})
+                res = JsonResponse({"status": "SERVER_ERROR", "message": "Sever taking too much time find the route. Try different destination and starting point.", "route": None})
             
         else :
             res = JsonResponse({"status": "NOT_FOUND", "message": "Cannot locate starting point or destination.", "route": None})
